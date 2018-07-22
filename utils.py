@@ -74,7 +74,7 @@ def get_powcert_url(user_code: str):
     prefix = "powcert="
 
     for answer in answers:
-        answer: str = answer.to_text().strip("\"")
+        answer = answer.to_text().strip("\"")
         if answer.lower().startswith(prefix):
             answer = answer[len(prefix):]
             answer = answer.replace("{user_code}", user_code)
