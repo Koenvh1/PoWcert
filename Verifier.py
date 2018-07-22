@@ -88,10 +88,16 @@ if __name__ == "__main__":
         if False not in output:
             print("All keys verified")
             if args.verify:
-                if not v.verify_signature(document["certificates"][user_code]["signature"],
-                                          requests.get(utils.get_powcert_url(user_code)).text):
-                    print("Signature verification failed")
+                if document["certificates"][user_code]["signature"] is None:
+                    print("No signature provided")
                 else:
-                    print("Signature OK!")
+                    certificate_url = utils.get_powcert_url(user_code)
+                    if certificate_url is None:
+                        print("Certificate URL could not be found")
+                    elif not v.verify_signature(document["certificates"][user_code]["signature"],
+                                                requests.get(certificate_url).text):
+                        print("Signature verification failed")
+                    else:
+                        print("Signature OK!")
         else:
             print("Not all codes could be verified")
