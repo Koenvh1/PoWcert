@@ -19,6 +19,12 @@
         84008144
       ],
       "signature": "tacUsIAkhiKPLgCvcB2JmPgA/Fg+MShGDrEv79zFnUir5i6c0igU9DU+MTUiu7uI"
+    },
+    "johndoe@example.org": {
+      "keys": [
+        7622264
+      ],
+      "signature": null
     }
   }
 }

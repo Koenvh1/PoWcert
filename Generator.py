@@ -43,7 +43,6 @@ class Generator:
             print(i)
             print(time.time() - self.start)
             return i
-
         return None
 
     def generate_signature(self, keys: list, key_file):
@@ -57,11 +56,10 @@ class Generator:
         sign = sk.sign(utils.get_key_signature(self.user_code, self.doc_code, keys))
         return base64.b64encode(sign).decode()
 
-    def generate_all(self):
+    def generate_all(self, offset=0, amount=100000000):
         self.start = time.time()
         with Pool(8) as p:
-            result = p.map(self.generate, range(100000000))
-
+            result = p.map(self.generate, range(offset, (offset + 1) * amount))
         # Make sure result is sorted and contains no None, otherwise it might go wrong verifying
         result = sorted([x for x in result if x is not None])
         return result
@@ -69,9 +67,21 @@ class Generator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate a certificate document')
-    parser.add_argument("user_code", type=str, help="The unique user identifier")
-    parser.add_argument("doc_path", type=str, help="The path to the document to sign")
-    parser.add_argument("--sign", type=str, help="Path to the private key to sign with")
+    parser.add_argument("user_code",
+                        type=str,
+                        help="The unique user identifier")
+    parser.add_argument("doc_path",
+                        type=str,
+                        help="The path to the document to sign")
+    parser.add_argument("--sign",
+                        type=str,
+                        help="Path to the private key to sign with")
+    parser.add_argument("--offset",
+                        type=int,
+                        help="Offset of keys to start calculating from (default: 0)")
+    parser.add_argument("--amount",
+                        type=int,
+                        help="Amount of keys to calculate, starting from the offset (default: 100000000)")
 
     args = parser.parse_args()
 
@@ -97,13 +107,16 @@ if __name__ == "__main__":
         print("The user_code already exists")
         exit()
 
-    r = g.generate_all()
+    offset = args.offset or 0
+    amount = args.amount or 100000000
+    keys = g.generate_all(offset, amount)
+
     sign = None
     if args.sign:
-        sign = g.generate_signature(r, args.sign)
+        sign = g.generate_signature(keys, args.sign)
 
     document["certificates"][g.user_code] = {}
-    document["certificates"][g.user_code]["keys"] = r
+    document["certificates"][g.user_code]["keys"] = keys
     document["certificates"][g.user_code]["signature"] = sign
 
     json.dump(document, open(args.doc_path + ".powcert", "w"))
