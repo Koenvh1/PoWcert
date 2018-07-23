@@ -1,11 +1,13 @@
 import argparse
 import base64
+import hashlib
 import json
 import os
 import time
 from multiprocessing.pool import Pool
 
 from ecdsa import SigningKey
+import ecdsa.util
 
 import utils
 
@@ -59,20 +61,20 @@ class Generator:
                     sorted(document["certificates"][self.user_code]["keys"])
                 sign = None
                 if self.private_key:
-                    sign = self.generate_signature(document["certificates"][self.user_code]["keys"], self.private_key)
+                    sign = self.generate_signature(document["certificates"][self.user_code]["keys"])
                 document["certificates"][self.user_code]["signature"] = sign
                 json.dump(document, open(self.certificate_file, "w"))
         return None
 
-    def generate_signature(self, keys: list, key_file):
+    def generate_signature(self, keys: list):
         """
         Generate a signature for this document and key set
         :param keys: The keys to verify
-        :param key_file: The path to the private key file
         :return: A Base64-encoded signature
         """
-        sk = SigningKey.from_pem(open(key_file).read())
-        sign = sk.sign(utils.get_key_signature(self.user_code, self.doc_code, keys))
+        sk = SigningKey.from_pem(open(self.private_key).read())
+        sign = sk.sign(utils.get_key_signature(self.user_code, self.doc_code, keys),
+                       hashfunc=hashlib.sha1, sigencode=ecdsa.util.sigencode_der)
         return base64.b64encode(sign).decode()
 
     def generate_all(self, offset=0):

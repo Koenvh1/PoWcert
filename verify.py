@@ -1,10 +1,12 @@
 import argparse
 import base64
+import hashlib
 import json
+import requests
 from multiprocessing.pool import Pool
 
-import requests
 from ecdsa import VerifyingKey, BadSignatureError
+import ecdsa.util
 
 import utils
 
@@ -48,7 +50,8 @@ class Verifier:
         try:
             vk = VerifyingKey.from_pem(key)
             sign = base64.b64decode(sign.encode())
-            vk.verify(sign, utils.get_key_signature(self.user_code, self.doc_code, self.keys))
+            vk.verify(sign, utils.get_key_signature(self.user_code, self.doc_code, self.keys),
+                      hashfunc=hashlib.sha1, sigdecode=ecdsa.util.sigdecode_der)
             return True
         except BadSignatureError:
             return False
@@ -81,6 +84,7 @@ if __name__ == "__main__":
     print("doc_code: " + document["doc_code"])
     for user_code in list(document["certificates"].keys()):
         v = Verifier(user_code, document["doc_code"], document["certificates"][user_code]["keys"])
+        print("-------------")
         print("user_code: " + v.user_code)
         print("sequence_to_find: " + v.sequence_to_find)
         output = v.verify_all()

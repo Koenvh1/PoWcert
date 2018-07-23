@@ -8,7 +8,7 @@
         80881312,
         84008144
       ],
-      "signature": "tacUsIAkhiKPLgCvcB2JmPgA/Fg+MShGDrEv79zFnUir5i6c0igU9DU+MTUiu7uI"
+      "signature": "MDUCGQDQmcxqmyjLc6nlWs5CPbQTWSLdhi4aUvQCGEHx7HbSlMAqljPeCKULJGu2FZURdqnNJw=="
     },
     "johndoe@example.org": {
       "keys": [
@@ -34,7 +34,7 @@
         536261330,
         548346489
       ],
-      "signature": "kuOy31+EioknVoV2NeXg0L/ZkHcdp0sWDbiNRNx04CzDxTsJa5/0/F7aQfAvJOX2"
+      "signature": "MDUCGQCYIa4BGsOAj6BLUTsuf317010QUmDb5vcCGBZSQ1k1rfugbE16wMdE8EqQvt8Zvni8wA=='"
     }
   }
 }

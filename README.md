@@ -12,7 +12,7 @@ allowing a single document to be verified by many.
 ### Generating:  
 The user gives the SHA-1 hash of a document 
 (the *doc_code*, for example `b55bfb61790e8d4b66660501e9945ed9b33be1d5`), 
-his own user identifier (the *user_code*, for example `koen@koenvh.nl`) and his private key. 
+his own user identifier (the *user_code*, for example `koen@koenvh.nl`) and his private key (ECDSA NIST192p SHA1). 
 The user code and doc code are case insensitive.
 
 The CRC32 of the *user_code* will be calculated, which will be converted to hexadecimal 
