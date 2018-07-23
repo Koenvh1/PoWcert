@@ -13,19 +13,27 @@ import utils
 class Generator:
     user_code = ""
     doc_code = ""
+    certificate_file = ""
+    private_key = None
 
     sequence_to_find = ""
 
     start = 0
 
-    def __init__(self, user_code: str, doc_code: str):
+    chunk_size = 100000000
+
+    def __init__(self, user_code: str, doc_code: str, certificate_file: str, private_key=None):
         """
         Initialise the generator for generating the keys
         :param user_code: Unique user identifier
         :param doc_code: SHA1-hash of the document
+        :param certificate_file: Path to the certificate file
+        :param private_key: Path to the private key or None if not signing
         """
         self.user_code = user_code.lower().strip()
         self.doc_code = doc_code.lower().strip()
+        self.certificate_file = certificate_file
+        self.private_key = private_key
 
         self.sequence_to_find = utils.generate_crc32(self.user_code)
 
@@ -42,7 +50,18 @@ class Generator:
             print(d)
             print(i)
             print(time.time() - self.start)
-            return i
+
+            # Save the new certificate
+            document = json.load(open(self.certificate_file))
+            if i not in document["certificates"][self.user_code]["keys"]:
+                document["certificates"][self.user_code]["keys"].append(i)
+                document["certificates"][self.user_code]["keys"] = \
+                    sorted(document["certificates"][self.user_code]["keys"])
+                sign = None
+                if self.private_key:
+                    sign = self.generate_signature(document["certificates"][self.user_code]["keys"], self.private_key)
+                document["certificates"][self.user_code]["signature"] = sign
+                json.dump(document, open(self.certificate_file, "w"))
         return None
 
     def generate_signature(self, keys: list, key_file):
@@ -56,13 +75,13 @@ class Generator:
         sign = sk.sign(utils.get_key_signature(self.user_code, self.doc_code, keys))
         return base64.b64encode(sign).decode()
 
-    def generate_all(self, offset=0, amount=100000000):
+    def generate_all(self, offset=0):
         self.start = time.time()
-        with Pool(8) as p:
-            result = p.map(self.generate, range(offset, (offset + 1) * amount))
-        # Make sure result is sorted and contains no None, otherwise it might go wrong verifying
-        result = sorted([x for x in result if x is not None])
-        return result
+        i = 0
+        while True:
+            with Pool(8) as p:
+                p.map(self.generate, range((i * self.chunk_size) + offset, ((i + 1) * self.chunk_size) + offset))
+                i += 1
 
 
 if __name__ == "__main__":
@@ -73,27 +92,27 @@ if __name__ == "__main__":
     parser.add_argument("doc_path",
                         type=str,
                         help="The path to the document to sign")
+    parser.add_argument("certificate_file",
+                        type=str,
+                        help="The signature document")
     parser.add_argument("--sign",
                         type=str,
                         help="Path to the private key to sign with")
     parser.add_argument("--offset",
                         type=int,
                         help="Offset of keys to start calculating from (default: 0)")
-    parser.add_argument("--amount",
-                        type=int,
-                        help="Amount of keys to calculate, starting from the offset (default: 100000000)")
 
     args = parser.parse_args()
 
     doc_code = utils.get_sha1_file_hash(args.doc_path)
-    g = Generator(args.user_code, doc_code)
+    g = Generator(args.user_code, doc_code, args.certificate_file, args.sign)
 
     print("user_code: " + g.user_code)
     print("doc_code: " + g.doc_code)
     print("sequence_to_find: " + g.sequence_to_find)
 
-    if os.path.exists(args.doc_path + ".powcert"):
-        document = json.load(open(args.doc_path + ".powcert"))
+    if os.path.exists(args.certificate_file):
+        document = json.load(open(args.certificate_file))
         if not doc_code == document["doc_code"]:
             print("The doc_code does not match")
             exit()
@@ -105,18 +124,12 @@ if __name__ == "__main__":
 
     if g.user_code in document["certificates"]:
         print("The user_code already exists")
-        exit()
+    else:
+        document["certificates"][g.user_code] = {
+            "keys": [],
+            "signature": None
+        }
 
+    json.dump(document, open(args.certificate_file, "w"))
     offset = args.offset or 0
-    amount = args.amount or 100000000
-    keys = g.generate_all(offset, amount)
-
-    sign = None
-    if args.sign:
-        sign = g.generate_signature(keys, args.sign)
-
-    document["certificates"][g.user_code] = {}
-    document["certificates"][g.user_code]["keys"] = keys
-    document["certificates"][g.user_code]["signature"] = sign
-
-    json.dump(document, open(args.doc_path + ".powcert", "w"))
+    g.generate_all(offset)

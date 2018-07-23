@@ -66,22 +66,22 @@ class Verifier:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Verify a certificate document')
     parser.add_argument("doc_path", type=str, help="The path to the document to verify")
+    parser.add_argument("certificate_file", type=str, help="The signature document")
     parser.add_argument("--verify", action="store_true", help="Verify the signatures")
 
     args = parser.parse_args()
 
-    document = json.load(open(args.doc_path + ".powcert", "rb"))
+    document = json.load(open(args.certificate_file, "rb"))
 
     doc_code = utils.get_sha1_file_hash(args.doc_path)
     if not doc_code == document["doc_code"]:
         print("The doc_code does not match")
         exit()
 
-    # The first user code
+    print("doc_code: " + document["doc_code"])
     for user_code in list(document["certificates"].keys()):
         v = Verifier(user_code, document["doc_code"], document["certificates"][user_code]["keys"])
         print("user_code: " + v.user_code)
-        print("doc_code: " + v.doc_code)
         print("sequence_to_find: " + v.sequence_to_find)
         output = v.verify_all()
 

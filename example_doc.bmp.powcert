@@ -1,16 +1,6 @@
 {
   "doc_code": "1c3e1a6da07038b08274b3bbd0e25b27430b8710",
   "certificates": {
-    "koen@koenvh.nl": {
-      "keys": [
-        16767901,
-        40165826,
-        67051127,
-        75346682,
-        99295106
-      ],
-      "signature": "VZ9o4G79ybb1d6h2J3y/JyJ5XGttWhTw3ujRgFbZTMWahWTMNz0UvNKfQYiXGQ8k"
-    },
     "koen2@koenvh.nl": {
       "keys": [
         9545097,
@@ -25,6 +15,26 @@
         7622264
       ],
       "signature": null
+    },
+    "koen@koenvh.nl": {
+      "keys": [
+        16767901,
+        40165826,
+        67051127,
+        75346682,
+        99295106,
+        143957747,
+        181822324,
+        244075377,
+        346585795,
+        361590117,
+        377966683,
+        394720490,
+        490134345,
+        536261330,
+        548346489
+      ],
+      "signature": "kuOy31+EioknVoV2NeXg0L/ZkHcdp0sWDbiNRNx04CzDxTsJa5/0/F7aQfAvJOX2"
     }
   }
 }
