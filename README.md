@@ -43,3 +43,18 @@ and it is checked that hashes of the keys do indeed contain the CRC32 of the *us
 A Python implementation of the specification described above has been implemented.
 It requires Python >3.5 to run, along with the following packages:
 `pip install dnspython requests ecdsa`
+
+Then it is possible to run either the generator or the verifier. The generator calculates new keys, the verifier
+verifies the keys in the document.
+
+As an example, one can run `python generate.py johndoe@example.org example_doc.bmp example_doc.bmp.powcert` to generate 
+more keys, and `python verify.py example_doc.bmp example_doc.bmp.powcert` to verify the keys 
+(add `--verify` to verify signatures as well).
+
+In order to sign keys, please generate a private/public key pair by running `python generate_key.py`.
+Upload the public key to some location according to the specification described in "Verifying". 
+It is then possible to add `--sign private.pem` to your generate command.
+
+It is also possible to create a repository where multiple users can download certificates, 
+and add their own keys toexisting certificates. 
+An example of such a repository can be found on [https://home.koenvh.nl/powcert](https://home.koenvh.nl/powcert)
