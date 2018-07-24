@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    document = json.load(open(args.certificate_file, "rb"))
+    document = json.load(open(args.certificate_file, "r"))
 
     doc_code = utils.get_sha1_file_hash(args.doc_path)
     if not doc_code == document["doc_code"]:
