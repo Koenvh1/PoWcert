@@ -2,11 +2,10 @@ import argparse
 import base64
 import hashlib
 import json
-import requests
-from multiprocessing.pool import Pool
 
-from ecdsa import VerifyingKey, BadSignatureError
 import ecdsa.util
+import requests
+from ecdsa import VerifyingKey, BadSignatureError
 
 import utils
 
@@ -59,11 +58,13 @@ class Verifier:
     def verify_all(self):
         """
         Verify all codes by this user_code
-        :return: A list of bools which keys could be verified
+        :return: A boolean whether all keys were verified
         """
-        with Pool(min(len(self.keys), 8)) as p:
-            result = p.map(self.verify, self.keys)
-        return result
+        for key in self.keys:
+            if not self.verify(key):
+                return False
+
+        return True
 
 
 if __name__ == "__main__":
@@ -71,9 +72,11 @@ if __name__ == "__main__":
     parser.add_argument("doc_path", type=str, help="The path to the document to verify")
     parser.add_argument("certificate_file", type=str, help="The signature document")
     parser.add_argument("--verify", action="store_true", help="Verify the signatures")
+    parser.add_argument("--write-report", type=str, help="Path to write the verification report to")
 
     args = parser.parse_args()
 
+    # Certificate file
     document = json.load(open(args.certificate_file, "r"))
 
     doc_code = utils.get_sha1_file_hash(args.doc_path)
@@ -81,20 +84,31 @@ if __name__ == "__main__":
         print("The doc_code does not match")
         exit()
 
+    # Report generated for --write-report
+    report = {
+        "doc_code": doc_code,
+        "verify_signatures": args.verify,
+        "certificates": {}
+    }
+
     print("doc_code: " + document["doc_code"])
     for user_code in list(document["certificates"].keys()):
         v = Verifier(user_code, document["doc_code"], document["certificates"][user_code]["keys"])
         print("-------------")
         print("user_code: " + v.user_code)
         print("sequence_to_find: " + v.sequence_to_find)
-        output = v.verify_all()
+        keys_valid = v.verify_all()
 
-        if False not in output:
-            print("All keys verified")
+        signature_provided = False
+        signature_valid = False
+
+        if keys_valid:
+            print("All " + str(len(v.keys)) + " keys verified")
             if args.verify:
                 if document["certificates"][user_code]["signature"] is None:
                     print("No signature provided")
                 else:
+                    signature_provided = True
                     certificate_url = utils.get_powcert_url(user_code)
                     if certificate_url is None:
                         print("Certificate URL could not be found")
@@ -102,6 +116,17 @@ if __name__ == "__main__":
                                                 requests.get(certificate_url).text):
                         print("Signature verification failed")
                     else:
+                        signature_valid = True
                         print("Signature OK!")
         else:
-            print("Not all codes could be verified")
+            print("Not all keys could be verified")
+
+        report["certificates"][v.user_code] = {
+            "sequence_to_find": v.sequence_to_find,
+            "keys_valid": keys_valid,
+            "signature_provided": signature_provided,
+            "signature_valid": signature_valid
+        }
+
+    if args.write_report:
+        json.dump(report, open(args.write_report, "w"))
