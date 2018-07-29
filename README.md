@@ -8,6 +8,8 @@ Current document signing methods depend on a central certificate authority
 It alleviates the problem of trust in a single authority by employing a decentralised herd protection system, 
 allowing a single document to be verified by many.
 
+**This README only contains the basics.** For a more complete overview, read the paper.
+
 ## Inner working
 ### Generating:  
 The user gives the SHA-1 hash of a document 
